@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 const sqlite3 = require('sqlite3').verbose();
-let db = new sqlite3.Database(process.env.DBPATH);
-require('dotenv').config();
-
+let dbPath = process.env.DBPATH;
+console.log(typeof dbPath);
+let db = new sqlite3.Database(dbPath);
 
 /* GET data from DB */
 
