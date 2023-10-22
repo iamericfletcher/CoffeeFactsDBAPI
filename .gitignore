@@ -1,0 +1,25 @@
+# Node.js specific
+node_modules/
+npm-debug.log
+
+# IDE specific (WebStorm)
+.idea/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# MacOS
+.DS_Store
+
+# Optional: If you're using SQLite
+*.db
+*.db-journal
