@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 const sqlite3 = require('sqlite3').verbose();
-let db = new sqlite3.Database("/Users/ericfletcher/coffeefacts.db");
-// let db = new sqlite3.Database("/home/iamericfletcher/coffeefacts.db");
+// let db = new sqlite3.Database("/Users/ericfletcher/coffeefacts.db");
+let db = new sqlite3.Database("/home/iamericfletcher/coffeefacts.db");
 
 /* GET data from DB */
 
