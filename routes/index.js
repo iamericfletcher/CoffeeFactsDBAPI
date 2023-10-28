@@ -7,17 +7,15 @@ require('dotenv').config();
 let db = new sqlite3.Database(process.env.DBPATH);
 // let db = new sqlite3.Database(process.env.TESTDBPATH);
 
-let routeCountDB = new sqlite3.Database(process.env.DBPATHROUTECOUNTS); // New SQLite database for route counts
-
 // Middleware to count route usage
 function countRoutes(req, res, next) {
     const route = req.path;
 
     // Increment counter in database
-    routeCountDB.run("INSERT OR IGNORE INTO routeCounts (route_name, access_count) VALUES (?, 0)", [route], function (err) {
+    db.run("INSERT OR IGNORE INTO routeCounts (route_name, access_count) VALUES (?, 0)", [route], function (err) {
         if (err) return console.log(err);
 
-        routeCountDB.run("UPDATE routeCounts SET access_count = access_count + 1 WHERE route_name = ?", [route], function (err) {
+        db.run("UPDATE routeCounts SET access_count = access_count + 1 WHERE route_name = ?", [route], function (err) {
             if (err) return console.log(err);
         });
     });
