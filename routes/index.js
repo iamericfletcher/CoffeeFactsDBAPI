@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const sqlite3 = require('sqlite3').verbose();
 const { auth } = require('express-oauth2-jwt-bearer');
+let pingCount = 0;
 require('dotenv').config();
 
 let db = new sqlite3.Database(process.env.DBPATH);
@@ -11,6 +12,12 @@ const jwtCheck = auth({
     audience: 'http://localhost:3002',
     issuerBaseURL: 'https://dev-zrsam7livd1kfvrr.us.auth0.com/',
     tokenSigningAlg: 'RS256'
+});
+
+// Silly counter
+router.get('/ping',(req, res) => {
+    pingCount++;
+    res.send(`ping world for ${pingCount} times`);
 });
 
 router.get('/public', function (req, res) {
