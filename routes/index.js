@@ -1,3 +1,4 @@
+const rateLimit = require('express-rate-limit');
 const express = require('express');
 const router = express.Router();
 const sqlite3 = require('sqlite3').verbose();
@@ -6,6 +7,14 @@ require('dotenv').config();
 
 let db = new sqlite3.Database(process.env.DBPATH);
 // let db = new sqlite3.Database(process.env.TESTDBPATH);
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+
+// Apply to all requests
+router.use(limiter);
 
 // Middleware to count route usage
 function countRoutes(req, res, next) {
