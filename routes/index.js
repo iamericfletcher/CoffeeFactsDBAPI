@@ -4,8 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 const { auth } = require('express-oauth2-jwt-bearer');
 require('dotenv').config();
 
-// let db = new sqlite3.Database(process.env.DBPATH);
-let db = new sqlite3.Database(process.env.TESTDBPATH);
+let db = new sqlite3.Database(process.env.DBPATH);
+// let db = new sqlite3.Database(process.env.TESTDBPATH);
 
 const jwtCheck = auth({
     audience: 'http://localhost:3002',
