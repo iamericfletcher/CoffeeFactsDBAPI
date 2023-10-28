@@ -9,7 +9,12 @@ let db = new sqlite3.Database(process.env.DBPATH);
 
 // Middleware to count route usage
 function countRoutes(req, res, next) {
-    const route = req.path;
+    let route = req.path;
+
+    // If route includes '/editFact/' or '/deleteFact/', trim off the '/:id' portion
+    if (route.includes('/editFact/') || route.includes('/deleteFact/')) {
+        route = '/' + route.split('/')[1];
+    }
 
     // Increment counter in database
     db.run("INSERT OR IGNORE INTO routeCounts (route_name, access_count) VALUES (?, 0)", [route], function (err) {
@@ -22,6 +27,7 @@ function countRoutes(req, res, next) {
 
     next();
 }
+
 
 const jwtCheck = auth({
     audience: 'http://localhost:3002',
