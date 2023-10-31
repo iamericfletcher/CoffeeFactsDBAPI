@@ -17,34 +17,33 @@ const limiter = rateLimit({
 router.use(limiter);
 
 // Middleware to count route usage
-function countRoutes(req, res, next) {
-    let route = req.path;
+// function countRoutes(req, res, next) {
+//     let route = req.path;
+//
+//     // If route includes '/editFact/' or '/deleteFact/', trim off the '/:id' portion
+//     if (route.includes('/editFact/') || route.includes('/deleteFact/')) {
+//         route = '/' + route.split('/')[1];
+//     }
+//
+//     // Increment counter in database
+//     db.run("INSERT OR IGNORE INTO routeCounts (route_name, access_count) VALUES (?, 0)", [route], function (err) {
+//         if (err) return console.log(err);
+//
+//         db.run("UPDATE routeCounts SET access_count = access_count + 1 WHERE route_name = ?", [route], function (err) {
+//             if (err) return console.log(err);
+//         });
+//     });
+//     next();
+// }
 
-    // If route includes '/editFact/' or '/deleteFact/', trim off the '/:id' portion
-    if (route.includes('/editFact/') || route.includes('/deleteFact/')) {
-        route = '/' + route.split('/')[1];
-    }
-
-    // Increment counter in database
-    db.run("INSERT OR IGNORE INTO routeCounts (route_name, access_count) VALUES (?, 0)", [route], function (err) {
-        if (err) return console.log(err);
-
-        db.run("UPDATE routeCounts SET access_count = access_count + 1 WHERE route_name = ?", [route], function (err) {
-            if (err) return console.log(err);
-        });
-    });
-
-    next();
-}
-
-
+// Middleware to check for valid JWT
 const jwtCheck = auth({
-    audience: 'http://localhost:3002',
-    issuerBaseURL: 'https://dev-zrsam7livd1kfvrr.us.auth0.com/',
-    tokenSigningAlg: 'RS256'
+    audience: process.env.AUDIENCE,
+    issuerBaseURL: process.env.ISSUERBASEURL,
+    tokenSigningAlg: process.env.TOKENSIGNINGALG
 });
 
-router.use(countRoutes); // Apply the route count middleware to all routes
+// router.use(countRoutes); // Apply the route count middleware to all routes
 
 router.get('/public', function (req, res) {
     db.all("SELECT id, fact, source, submitted_on FROM facts WHERE is_approved = 1", function (err, rows) {
