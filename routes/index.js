@@ -80,7 +80,7 @@ router.post('/addFact', jwtCheck, function (req, res) {
 router.put('/editFact/:id', jwtCheck, function (req, res) {
     const id = req.params.id;
     const {fact, source} = req.body;
-    const sql = "UPDATE facts SET fact = ?, source = ?, is_approved = 0 WHERE id = ?";
+    const sql = "UPDATE facts SET fact = ?, source = ?, is_approved = 0, last_user_edit_on = DATETIME() WHERE id = ?";
 
     db.run(sql, [fact, source, id], function (err) {
         if (err) {
@@ -132,7 +132,7 @@ router.get('/unapprovedFacts', jwtCheck, function (req, res) {
 // Route for approving a fact by ID
 router.put('/adminApproveFact/:id', jwtCheck, function (req, res) {
     const id = req.params.id;
-    const sql = "UPDATE facts SET is_approved = 1 WHERE id = ?";
+    const sql = "UPDATE facts SET is_approved = 1, admin_approved_on = DATETIME() WHERE id = ?";
 
     db.run(sql, [id], function (err) {
         if (err) {
@@ -151,7 +151,7 @@ router.delete('/adminRejectFact/:id', jwtCheck, function (req, res) {
     // and can edit it and resubmit it for approval within a certain time frame before it is deleted from the database
     // admin rejected facts will be displayed in the user profile page under the admin rejected section
     // admins would be required to provide a brief reason for rejecting the fact which would be displayed to the user
-    const sql = "UPDATE facts SET is_approved = 2 WHERE id = ?";
+    const sql = "UPDATE facts SET is_approved = 2, admin_rejected_for_review_on = DATETIME() WHERE id = ?";
     // const sql = `DELETE FROM facts WHERE id = ?`;
     db.run(sql, id, function (err) {
         if (err) {
