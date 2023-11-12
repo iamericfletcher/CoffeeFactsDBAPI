@@ -5,8 +5,8 @@ const sqlite3 = require('sqlite3').verbose();
 const {auth} = require('express-oauth2-jwt-bearer');
 require('dotenv').config();
 
-let db = new sqlite3.Database(process.env.DBPATH);
-// let db = new sqlite3.Database(process.env.TESTDBPATH);
+// let db = new sqlite3.Database(process.env.DBPATH);
+let db = new sqlite3.Database(process.env.TESTDBPATH);
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -33,21 +33,21 @@ function countRoutes(req, res, next) {
             if (err) return console.log(err);
         });
     });
-
     next();
 }
 
-
+// Middleware to check for valid JWT
 const jwtCheck = auth({
-    audience: 'http://localhost:3002',
-    issuerBaseURL: 'https://dev-zrsam7livd1kfvrr.us.auth0.com/',
-    tokenSigningAlg: 'RS256'
+    audience: process.env.AUDIENCE,
+    issuerBaseURL: process.env.ISSUERBASEURL,
+    tokenSigningAlg: process.env.TOKENSIGNINGALG
 });
+
 
 router.use(countRoutes); // Apply the route count middleware to all routes
 
 router.get('/public', function (req, res) {
-    db.all("SELECT id, fact, source, submitted_on FROM facts", function (err, rows) {
+    db.all("SELECT id, fact, source, submitted_on FROM facts WHERE is_approved = 1", function (err, rows) {
         if (err) {
             return res.status(500).json({"error": err.message});
         }
@@ -56,6 +56,8 @@ router.get('/public', function (req, res) {
 });
 
 router.get('/private', jwtCheck, function (req, res) {
+    // SQL statement to select all facts from the database where
+    // db.all("SELECT * FROM facts WHERE is_approved = 1", function (err, rows) {
     db.all("SELECT * FROM facts", function (err, rows) {
         if (err) {
             return res.status(500).json({"error": err.message});
@@ -66,7 +68,8 @@ router.get('/private', jwtCheck, function (req, res) {
 
 router.post('/addFact', jwtCheck, function (req, res) {
     const {fact, source, user_id} = req.body;
-    const sql = `INSERT INTO facts (fact, source, user_id) VALUES (?, ?, ?)`;
+    const sql = `INSERT INTO facts (fact, source, user_id)
+                 VALUES (?, ?, ?)`;
     db.run(sql, [fact, source, user_id], function (err) {
         if (err) {
             return res.status(500).json({"error": err.message});
@@ -79,7 +82,7 @@ router.post('/addFact', jwtCheck, function (req, res) {
 router.put('/editFact/:id', jwtCheck, function (req, res) {
     const id = req.params.id;
     const {fact, source} = req.body;
-    const sql = "UPDATE facts SET fact = ?, source = ? WHERE id = ?";
+    const sql = "UPDATE facts SET fact = ?, source = ?, is_approved = 0, last_user_edit_on = DATETIME() WHERE id = ?";
 
     db.run(sql, [fact, source, id], function (err) {
         if (err) {
@@ -110,7 +113,60 @@ router.delete('/deleteFact/:id', jwtCheck, function (req, res) {
         if (err) {
             return res.status(500).json({"error": err.message});
         }
-        return res.status(200).json({"id": id});
+        return res.status(200).json({"id": id, "user_id": req.user_id});
+    });
+});
+
+
+// Route for getting all unapproved facts from the database for the admin panel on the frontend
+router.get('/unapprovedFacts', jwtCheck, function (req, res) {
+    const sql = "SELECT * FROM facts WHERE is_approved = 0";
+
+    db.all(sql, function (err, rows) {
+        if (err) {
+            return res.status(500).json({"error": err.message});
+        }
+        res.json(rows);
+    });
+});
+
+// Route for approving a fact by ID
+router.put('/adminApproveFact/:id', jwtCheck, function (req, res) {
+    const id = req.params.id;
+    const sql = "UPDATE facts SET is_approved = 1, admin_approved_on = DATETIME() WHERE id = ?";
+
+    db.run(sql, [id], function (err) {
+        if (err) {
+            return res.status(500).json({"error": err.message});
+        }
+        res.json({"success": true});
+    });
+});
+
+// Route for deleting a fact by ID
+router.delete('/adminRejectFact/:id', jwtCheck, function (req, res) {
+    const id = req.params.id;
+    const sql = "UPDATE facts SET is_approved = 2, admin_rejected_for_review_on = DATETIME() WHERE id = ?";
+    // const sql = `DELETE FROM facts WHERE id = ?`;
+    db.run(sql, id, function (err) {
+        if (err) {
+            return res.status(500).json({"error": err.message});
+        }
+        res.json({"success": true});
+    });
+});
+
+// Router for admin to delete a fact by ID
+router.delete('/adminDeleteFact/:id', jwtCheck, function (req, res) {
+    const id = req.params.id;
+    const sql = `DELETE
+                 FROM facts
+                 WHERE id = ?`;
+    db.run(sql, id, function (err) {
+        if (err) {
+            return res.status(500).json({"error": err.message});
+        }
+        res.json({"success": true});
     });
 });
 
